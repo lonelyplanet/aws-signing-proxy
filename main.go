@@ -14,8 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/client/metadata"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/defaults"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/private/signer/v4"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 )
 
 var targetFlag = flag.String("target", "", "target url to proxy to")
@@ -51,7 +52,7 @@ func NewSigningProxy(target *url.URL, creds *credentials.Credentials, region str
 		}
 
 		handlers := request.Handlers{}
-		handlers.Sign.PushBack(v4.Sign)
+		handlers.Sign.PushBack(v4.SignSDKRequest)
 
 		// Do we need to use request.New ? Or can we create a raw Request struct and
 		//  jus swap out the HTTPRequest with our own existing one?
@@ -109,7 +110,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	creds := credentials.NewEnvCredentials()
+	creds := defaults.CredChain(defaults.Config(), defaults.Handlers())
 	region := *regionFlag
 
 	proxy := NewSigningProxy(targetUrl, creds, region)
